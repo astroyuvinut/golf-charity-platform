@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { GlassCard } from '@/components/shared/glass-card'
 import { Button } from '@/components/ui/button'
@@ -10,9 +10,12 @@ import { formatDate, extractScoreDigits } from '@/lib/utils/helpers'
 import { Plus, Trash2, Loader2, Golf, Trophy } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import type { Database } from '@/types/database'
+
+type Score = Database['public']['Tables']['scores']['Row']
 
 export default function ScoresPage() {
-  const [scores, setScores] = useState<any[]>([])
+  const [scores, setScores] = useState<Score[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [showForm, setShowForm] = useState(false)
@@ -25,8 +28,7 @@ export default function ScoresPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  // Fetch scores
-  useState(() => {
+  useEffect(() => {
     const fetchScores = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
@@ -42,7 +44,7 @@ export default function ScoresPage() {
       setLoading(false)
     }
     fetchScores()
-  })
+  }, [])
 
   const handleAddScore = async (e: React.FormEvent) => {
     e.preventDefault()
