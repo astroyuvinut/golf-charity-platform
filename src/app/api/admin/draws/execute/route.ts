@@ -4,22 +4,22 @@ import { executeDraw } from '@/lib/draw/engine'
 
 export async function POST(request: Request) {
   try {
-    const supabase = createClient()
+    const supabase = createClient() as any
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // TODO: Add admin role check
-    // const { data: profile } = await supabase
-    //   .from('profiles')
-    //   .select('is_admin')
-    //   .eq('id', user.id)
-    //   .single()
-    // if (!profile?.is_admin) {
-    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    // }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.is_admin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const { drawId, mode, prizePoolCents } = await request.json()
 
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       .from('draws')
       .select('*')
       .eq('id', drawId)
-      .single()
+      .single() as { data: { status: string; prize_pool_cents: number; jackpot_percent: number; four_match_percent: number; three_match_percent: number } | null; error: Error | null }
 
     if (drawError || !draw) {
       return NextResponse.json({ error: 'Draw not found' }, { status: 404 })
